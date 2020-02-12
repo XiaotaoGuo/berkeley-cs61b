@@ -1,13 +1,13 @@
-public class ArrayDeque<Typename> {
+public class ArrayDeque<T> {
     private int size;
     private int frontPtr;
     private int backPtr;
     private int maxSize;
     private final double ratio = 0.04;
-    private Typename items[];
+    private T[] items;
 
     public ArrayDeque() {
-        items = (Typename []) new Object[8];
+        items = (T[]) new Object[8];
         size = 0;
         frontPtr = 0;
         backPtr = 0;
@@ -21,7 +21,7 @@ public class ArrayDeque<Typename> {
         return size;
     }
 
-    public void addFirst(Typename item) {
+    public void addFirst(T item) {
         if (size == maxSize) {
             resize(maxSize * 2);
         }
@@ -30,8 +30,7 @@ public class ArrayDeque<Typename> {
             items[frontPtr] = item;
             backPtr++;
             backPtr %= maxSize;
-        }
-        else {
+        } else {
             frontPtr = frontPtr == 0 ? maxSize - 1 : frontPtr - 1;
             items[frontPtr] = item;
         }
@@ -39,7 +38,7 @@ public class ArrayDeque<Typename> {
         size++;
     }
 
-    public void addLast(Typename item) {
+    public void addLast(T item) {
         if (size == maxSize) {
             resize(maxSize * 2);
         }
@@ -50,32 +49,32 @@ public class ArrayDeque<Typename> {
         size++;
     }
 
-    public Typename removeFirst() {
+    public T removeFirst() {
         if (size == 0) {
             return null;
         }
 
-        Typename item = items[frontPtr];
+        T item = items[frontPtr];
         frontPtr++;
         frontPtr %= maxSize;
         size--;
 
-        if ((double)size / maxSize <= 0.25) {
+        if ((double) size / maxSize <= 0.25 && size > 8) {
             resize((int) (size * 0.5));
         }
 
         return item;
     }
 
-    public Typename removeLast() {
+    public T removeLast() {
         if (isEmpty()) {
             return null;
         }
         backPtr = backPtr == 0 ? maxSize - 1 : backPtr - 1;
-        Typename item = items[backPtr];
+        T item = items[backPtr];
         size--;
 
-        if((double)size / maxSize <= 0.25) {
+        if ((double) size / maxSize <= 0.25 && size > 8) {
             resize((int) (size * 0.5));
         }
 
@@ -86,15 +85,15 @@ public class ArrayDeque<Typename> {
     public void printDeque() {
         int idx = 0;
         int currPtr = frontPtr;
-        while(idx < size) {
+        while (idx < size) {
             System.out.print(items[currPtr] + " ");
             idx++;
             currPtr = (currPtr + 1) % maxSize;
         }
     }
 
-    public Typename get(int index) {
-        if(index >= size) {
+    public T get(int index) {
+        if (index >= size) {
             return null;
         }
 
@@ -104,14 +103,13 @@ public class ArrayDeque<Typename> {
 
     /* Utility function to copy data from old array to new array */
     private void resize(int newSize) {
-        Typename[] newItems = (Typename []) new Object[newSize];
+        T[] newItems = (T[]) new Object[newSize];
         int currPtr = frontPtr;
         int idx = 0;
         while (idx < size) {
             newItems[idx] = items[currPtr];
             idx++;
-            currPtr++;
-            currPtr %= maxSize;
+            currPtr = (currPtr + 1) % maxSize;
         }
         items = newItems;
         maxSize = newSize;
