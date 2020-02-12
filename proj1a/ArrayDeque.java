@@ -59,8 +59,8 @@ public class ArrayDeque<T> {
         frontPtr %= maxSize;
         size--;
 
-        if ((double) size / maxSize <= 0.25 && size > 8) {
-            resize((int) (size * 0.5));
+        if ((double) size / maxSize <= 0.25 && maxSize >= 16) {
+            resize((int) (maxSize * 0.5));
         }
 
         return item;
@@ -74,8 +74,8 @@ public class ArrayDeque<T> {
         T item = items[backPtr];
         size--;
 
-        if ((double) size / maxSize <= 0.25 && size > 8) {
-            resize((int) (size * 0.5));
+        if ((double) size / maxSize <= 0.25 && maxSize >= 16) {
+            resize((int) (maxSize * 0.5));
         }
 
         return item;
