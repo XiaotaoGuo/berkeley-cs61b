@@ -12,7 +12,7 @@ public class Palindrome {
         return isPalindromeHelper(d);
     }
 
-    public boolean isPalindromeHelper(Deque<Character> d) {
+    private boolean isPalindromeHelper(Deque<Character> d) {
         if (d.isEmpty() || d.size() == 1) {
             return true;
         }
@@ -30,7 +30,7 @@ public class Palindrome {
         return isPalindromeOffByOneHelper(d, cc);
     }
 
-    public boolean isPalindromeOffByOneHelper(Deque<Character> d, CharacterComparator cc) {
+    private boolean isPalindromeOffByOneHelper(Deque<Character> d, CharacterComparator cc) {
         if (d.isEmpty() || d.size() == 1) {
             return true;
         }
