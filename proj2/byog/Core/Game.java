@@ -4,7 +4,8 @@ import byog.TileEngine.TERenderer;
 import byog.TileEngine.TETile;
 import byog.TileEngine.Tileset;
 
-import java.util.*;
+import java.util.Set;
+import java.util.HashSet;
 
 public class Game {
     TERenderer ter = new TERenderer();
@@ -31,27 +32,27 @@ public class Game {
      * @return the 2D TETile[][] representing the state of the world
      */
     public TETile[][] playWithInputString(String input) {
-        // TODO: Fill out this method to run the game using the input passed in,
+
         // and return a 2D tile representation of the world that would have been
         // drawn if the same inputs had been given to playWithKeyboard().
         int index = 0;
-        World m_World;
+        World mWorld;
 
         //ter.initialize(WIDTH, HEIGHT);
         TETile[][] finalWorldFrame = null;
         if (input.charAt(index) == 'N' || input.charAt(index) == 'n') {
             index++;
             long seed = 0;
-            while (index < input.length() &&
-                    input.charAt(index) <= '9' && input.charAt(index) >= '0') {
+            while (index < input.length()
+                    && input.charAt(index) <= '9' && input.charAt(index) >= '0') {
                 seed *= 10;
                 seed += input.charAt(index) - '0';
                 index++;
             }
-            m_World = new World(WIDTH, HEIGHT, seed);
+            mWorld = new World(WIDTH, HEIGHT, seed);
         } else if (input.charAt(index) == 'L' || input.charAt(index) == 'l') {
-            m_World = new World("./savefile.txt");
-            if (m_World == null) {
+            mWorld = new World("./savefile.txt");
+            if (mWorld == null) {
                 System.out.println("No previous record.\n");
                 return finalWorldFrame;
             }
@@ -66,13 +67,10 @@ public class Game {
             return finalWorldFrame;
         }
 
-        int[][] worldArray = m_World.getWorldArray();
+        int[][] worldArray = mWorld.getWorldArray();
         finalWorldFrame = new TETile[WIDTH][HEIGHT];
         Set<Character> motionCommand = initializeMotionCommand();
 
-
-
-        //TODO: finish motion implemenatation
 //        while (index < input.length()) {
 //            char currChar = input.charAt(index);
 //            if (motionCommand.contains(currChar)) {
