@@ -48,6 +48,10 @@ public class World {
                             + xSize + ", height: " + ySize + ".");
     }
 
+    public World(String path) {
+
+    }
+
     public void fillWorld() {
         while (roomList.size() < totalRoomCount) {
             if (roomList.size() == 0) {

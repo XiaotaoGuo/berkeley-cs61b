@@ -4,6 +4,8 @@ import byog.TileEngine.TERenderer;
 import byog.TileEngine.TETile;
 import byog.TileEngine.Tileset;
 
+import java.util.*;
+
 public class Game {
     TERenderer ter = new TERenderer();
     /* Feel free to change the width and height. */
@@ -32,12 +34,54 @@ public class Game {
         // TODO: Fill out this method to run the game using the input passed in,
         // and return a 2D tile representation of the world that would have been
         // drawn if the same inputs had been given to playWithKeyboard().
-        World m_World = new World(WIDTH, HEIGHT, 5654);
-        int[][] worldArray = m_World.getWorldArray();
-        TERenderer ter = new TERenderer();
-        ter.initialize(WIDTH, HEIGHT);
+        int index = 0;
+        World m_World;
 
-        TETile[][] finalWorldFrame = new TETile[WIDTH][HEIGHT];
+        //ter.initialize(WIDTH, HEIGHT);
+        TETile[][] finalWorldFrame = null;
+        if (input.charAt(index) == 'N' || input.charAt(index) == 'n') {
+            index++;
+            long seed = 0;
+            while (index < input.length() &&
+                    input.charAt(index) <= '9' && input.charAt(index) >= '0') {
+                seed *= 10;
+                seed += input.charAt(index) - '0';
+                index++;
+            }
+            m_World = new World(WIDTH, HEIGHT, seed);
+        } else if (input.charAt(index) == 'L' || input.charAt(index) == 'l') {
+            m_World = new World("./savefile.txt");
+            if (m_World == null) {
+                System.out.println("No previous record.\n");
+                return finalWorldFrame;
+            }
+            index++;
+        } else {
+            System.out.println("Invalid command.\n");
+            return finalWorldFrame;
+        }
+
+        if (input.charAt(index) != 'S' && input.charAt(index) != 's') {
+            System.out.println("Invalid command.\n");
+            return finalWorldFrame;
+        }
+
+        int[][] worldArray = m_World.getWorldArray();
+        finalWorldFrame = new TETile[WIDTH][HEIGHT];
+        Set<Character> motionCommand = initializeMotionCommand();
+
+
+
+        //TODO: finish motion implemenatation
+//        while (index < input.length()) {
+//            char currChar = input.charAt(index);
+//            if (motionCommand.contains(currChar)) {
+//                m_World.moveCharacter(Character.toUpperCase(currChar));
+//            } else if (motionCommand == 'Q') {
+//
+//            }
+//        }
+
 
         for (int x = 0; x < WIDTH; x += 1) {
             for (int y = 0; y < HEIGHT; y += 1) {
@@ -56,7 +100,22 @@ public class Game {
             }
         }
 
-        ter.renderFrame(finalWorldFrame);
+        //ter.renderFrame(finalWorldFrame);
         return finalWorldFrame;
     }
+
+    private Set<Character> initializeMotionCommand() {
+        Set<Character> motionCommand = new HashSet<>();
+        motionCommand.add('W');
+        motionCommand.add('w');
+        motionCommand.add('A');
+        motionCommand.add('a');
+        motionCommand.add('S');
+        motionCommand.add('s');
+        motionCommand.add('D');
+        motionCommand.add('d');
+
+        return motionCommand;
+    }
+
 }
