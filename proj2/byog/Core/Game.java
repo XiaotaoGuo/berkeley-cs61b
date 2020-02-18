@@ -5,8 +5,16 @@ import byog.TileEngine.TETile;
 import byog.TileEngine.Tileset;
 import edu.princeton.cs.introcs.StdDraw;
 
-import java.awt.*;
-import java.io.*;
+import java.awt.Font;
+import java.awt.Color;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.IOException;
+import java.io.FileNotFoundException;
+
 import java.util.Set;
 import java.util.HashSet;
 
@@ -22,7 +30,7 @@ public class Game {
     private static int hudHeight = 1;
 
     World mWorld;
-    TETile[][] WorldFrame;
+    TETile[][] worldFrame;
     Set<Character> motionCommand;
 
     private long seed = 0;
@@ -45,15 +53,15 @@ public class Game {
         int[][] worldArray = mWorld.getWorldArray();
         ter.initialize(WIDTH, HEIGHT, 0, hudHeight);
 
-        WorldFrame = new TETile[worldWidth][worldHeight];
-        initializeWorldTile(worldArray, WorldFrame);
-        ter.renderFrame(WorldFrame);
+        worldFrame = new TETile[worldWidth][worldHeight];
+        initializeWorldTile(worldArray, worldFrame);
+        ter.renderFrame(worldFrame);
         drawHUD("", "",  "World begin!");
 
         motionCommand = initializeMotionCommand();
         boolean saveOption = playGame("");
         if (saveOption) {
-            SaveGame();
+            saveGame();
             System.out.println("Game saved!");
 
         }
@@ -88,7 +96,7 @@ public class Game {
         if (input.charAt(index) == 'N' || input.charAt(index) == 'n') {
             /* new game */
             index++;
-            long seed = 0;
+            seed = 0;
             while (index < input.length()
                     && input.charAt(index) <= '9' && input.charAt(index) >= '0') {
                 seed *= 10;
@@ -100,7 +108,7 @@ public class Game {
             /* after seed, it should be s to start the game */
             if (input.charAt(index) != 'S' && input.charAt(index) != 's') {
                 System.out.println("Invalid command.\n");
-                return WorldFrame;
+                return worldFrame;
             }
         } else if (input.charAt(index) == 'L' || input.charAt(index) == 'l') {
             /* load game */
@@ -108,59 +116,59 @@ public class Game {
             index++;
         } else {
             System.out.println("Invalid command.\n");
-            return WorldFrame;
+            return worldFrame;
         }
 
 
 
         int[][] worldArray = mWorld.getWorldArray();
-        WorldFrame = new TETile[worldWidth][worldHeight];
+        worldFrame = new TETile[worldWidth][worldHeight];
 
-        initializeWorldTile(worldArray, WorldFrame);
+        initializeWorldTile(worldArray, worldFrame);
 
         motionCommand = initializeMotionCommand();
 
         boolean saveOption = playGame(input.substring(index));
         if (saveOption) {
-            SaveGame();
+            saveGame();
             System.out.println("Game saved!");
 
         }
 
         //ter.renderFrame(finalWorldFrame);
-        return WorldFrame;
+        return worldFrame;
     }
 
     private Set<Character> initializeMotionCommand() {
-        Set<Character> motionCommand = new HashSet<>();
-        motionCommand.add('W');
-        motionCommand.add('w');
-        motionCommand.add('A');
-        motionCommand.add('a');
-        motionCommand.add('S');
-        motionCommand.add('s');
-        motionCommand.add('D');
-        motionCommand.add('d');
+        Set<Character> motioncommand = new HashSet<>();
+        motioncommand.add('W');
+        motioncommand.add('w');
+        motioncommand.add('A');
+        motioncommand.add('a');
+        motioncommand.add('S');
+        motioncommand.add('s');
+        motioncommand.add('D');
+        motioncommand.add('d');
 
-        return motionCommand;
+        return motioncommand;
     }
 
-    private void initializeWorldTile(int[][] worldArray, TETile[][] WorldFrame) {
-        int worldWidth = WorldFrame.length;
-        int worldHeight = WorldFrame[0].length;
+    private void initializeWorldTile(int[][] worldArray, TETile[][] worldframe) {
+        int worldWidth = worldframe.length;
+        int worldHeight = worldframe[0].length;
         for (int x = 0; x < worldWidth; x += 1) {
             for (int y = 0; y < worldHeight; y += 1) {
                 int content = worldArray[worldHeight - 1 - y][x];
                 if (content == 0) {
-                    WorldFrame[x][y] = Tileset.NOTHING;
+                    worldframe[x][y] = Tileset.NOTHING;
                 } else if (content == 1) {
-                    WorldFrame[x][y] = Tileset.WALL;
+                    worldframe[x][y] = Tileset.WALL;
                 } else if (content == 2) {
-                    WorldFrame[x][y] = Tileset.FLOOR;
+                    worldframe[x][y] = Tileset.FLOOR;
                 } else if (content == 3) {
-                    WorldFrame[x][y] = Tileset.PLAYER;
+                    worldframe[x][y] = Tileset.PLAYER;
                 } else if (content == 4) {
-                    WorldFrame[x][y] = Tileset.LOCKED_DOOR;
+                    worldframe[x][y] = Tileset.LOCKED_DOOR;
                 }
             }
         }
@@ -198,7 +206,7 @@ public class Game {
                 return 1;
             } else if (key == 'L' || key == 'l') {
                 return 2;
-            } else if (key == 'Q' || key == 'q'){
+            } else if (key == 'Q' || key == 'q') {
                 return 0;
             }
 
@@ -211,13 +219,13 @@ public class Game {
         StdDraw.setPenColor(Color.white);
         StdDraw.textRight(WIDTH / 12, 0.5, "Last input " + lastmove);
         StdDraw.textRight(WIDTH / 5, 0.5, moveStatus);
-        StdDraw.text(WIDTH/ 2, 0.5, centerMessage);
+        StdDraw.text(WIDTH / 2, 0.5, centerMessage);
         int x = Math.round((float) (StdDraw.mouseX() - 0.5));
-        int y = Math.round((float) (StdDraw.mouseY()- 0.5) - hudHeight);
+        int y = Math.round((float) (StdDraw.mouseY() - 0.5) - hudHeight);
         int xInd = x;
         int yInd = HEIGHT - hudHeight - 1 - y;
         String mouseMessage = mWorld.getStatus(xInd, yInd);
-        StdDraw.textLeft(WIDTH -10, 0.5, mouseMessage);
+        StdDraw.textLeft(WIDTH - 10, 0.5, mouseMessage);
         StdDraw.show();
     }
 
@@ -227,14 +235,14 @@ public class Game {
         String lastmessage = "Game begin!";
         int count = 0;
         int index = 0;
-        while (stringInput.length() == 0 ||
-                (index < stringInput.length())) {
+        while (stringInput.length() == 0
+                || (index < stringInput.length())) {
             char key;
             if (stringInput.length() == 0) {
                 if (!StdDraw.hasNextKeyTyped()) {
                     count++;
                     if (count == 10e5) {
-                        ter.renderFrame(WorldFrame);
+                        ter.renderFrame(worldFrame);
                         drawHUD(lastinput, lastStatus, lastmessage);
                         count = 0;
                     }
@@ -251,8 +259,8 @@ public class Game {
                 boolean status = mWorld.moveCharacter(Character.toUpperCase(key));
                 int[] currPos = mWorld.character.getPosition();
                 if (status) {
-                    WorldFrame[prevPos[0]][prevPos[1]] = Tileset.FLOOR;
-                    WorldFrame[currPos[0]][currPos[1]] = Tileset.PLAYER;
+                    worldFrame[prevPos[0]][prevPos[1]] = Tileset.FLOOR;
+                    worldFrame[currPos[0]][currPos[1]] = Tileset.PLAYER;
                     lastinput = Character.toString(Character.toUpperCase(key));
                     lastStatus = "Successful move!";
                     lastmessage = "Keep going!";
@@ -260,7 +268,7 @@ public class Game {
                         lastStatus = "Successful move!";
                         lastmessage = "Reached the gold door!";
                         if (stringInput.length() == 0) {
-                            ter.renderFrame(WorldFrame);
+                            ter.renderFrame(worldFrame);
                             drawHUD(lastinput, lastStatus, lastmessage);
                         }
 
@@ -274,23 +282,21 @@ public class Game {
                     lastmessage = "Keep going!";
                 }
 
-            } else if(key == ':') {
+            } else if (key == ':') {
                 lastinput = ":";
                 lastStatus = "";
                 lastmessage = "Ready to save and quit?";
-            }
-            else if (key == 'Q' || key == 'q' && lastinput == ":") {
+            } else if (key == 'Q' || key == 'q' && lastinput.equals(":")) {
                 lastStatus = "";
                 lastmessage = "Game saved, please close the window!";
                 if (stringInput.length() == 0) {
-                    ter.renderFrame(WorldFrame);
+                    ter.renderFrame(worldFrame);
                     drawHUD(":Q", lastStatus, lastmessage);
                 }
 
 
                 return true;
-            }
-            else {
+            } else {
                 lastinput = Character.toString(Character.toUpperCase(key));
                 lastStatus = "Invalid command!";
                 lastmessage = "Keep going!";
@@ -316,7 +322,7 @@ public class Game {
         StdDraw.setPenColor(Color.white);
         StdDraw.text(menuWidth / 2, menuHeight / 2 + 2, "Please enter a seed, press S to finish");
         StdDraw.show();
-        long seed = 0;
+        seed = 0;
         while (true) {
             if (!StdDraw.hasNextKeyTyped()) {
                 continue;
@@ -325,27 +331,29 @@ public class Game {
             if (key == 'S' || key == 's') {
                 this.seed = seed;
                 break;
-            }
-            else if (key >= '0' && key <= '9') {
+            } else if (key >= '0' && key <= '9') {
                 seed *= 10;
                 seed += key - '0';
                 StdDraw.clear();
                 StdDraw.clear(Color.black);
-                StdDraw.text(menuWidth / 2, menuHeight / 2 + 2, "Please enter a seed, press S to finish");
+                StdDraw.text(menuWidth / 2, menuHeight / 2 + 2,
+                        "Please enter a seed, press S to finish");
                 StdDraw.text(menuWidth / 2, menuHeight / 2, Long.toString(seed));
                 StdDraw.show();
             } else {
                 StdDraw.clear();
                 StdDraw.clear(Color.black);
-                StdDraw.text(menuWidth / 2, menuHeight / 2 + 2, "Please enter a seed, press S to finish");
+                StdDraw.text(menuWidth / 2, menuHeight / 2 + 2,
+                        "Please enter a seed, press S to finish");
                 StdDraw.text(menuWidth / 2, menuHeight / 2, Long.toString(seed));
-                StdDraw.text(menuWidth / 2, menuHeight / 2 - 2, "Please enter a number between 0 to 9!");
+                StdDraw.text(menuWidth / 2, menuHeight / 2 - 2,
+                        "Please enter a number between 0 to 9!");
                 StdDraw.show();
             }
         }
     }
 
-    private void SaveGame() {
+    private void saveGame() {
         File f = new File("./savefile.txt");
         try {
             if (!f.exists()) {
