@@ -2,8 +2,9 @@ package byog.Core;
 
 import java.util.ArrayList;
 import java.util.Random;
+import java.io.Serializable;
 
-public class World {
+public class World implements Serializable {
 
     protected int xSize;
     protected int ySize;
@@ -41,9 +42,9 @@ public class World {
         roomList = new ArrayList<>();
         hallwayList = new ArrayList<>();
 
-        fillWorld();
+        generateWorld();
         putCharacterAndDoor();
-        printWorld();
+        //printWorld();
         System.out.println("Initialized an empty world with width : "
                             + xSize + ", height: " + ySize + ".");
     }
@@ -52,7 +53,67 @@ public class World {
 
     }
 
-    public void fillWorld() {
+    /* getter function for world array */
+    public int[][] getWorldArray() {
+        return worldArray;
+    }
+
+    /* move character by one step in given direction */
+    public boolean moveCharacter(char dir) {
+        Position nextCharacter;
+
+        if (dir == 'W') {
+            nextCharacter = new Position(character, 0, 1);
+        } else if (dir == 'A') {
+            nextCharacter = new Position(character, -1, 0);
+        } else if (dir == 'S') {
+            nextCharacter = new Position(character, 0, -1);
+        } else if (dir == 'D') {
+            nextCharacter = new Position(character, 1, 0);
+        } else {
+            System.out.println("Invalid move command!");
+            return false;
+        }
+        if (!nextCharacter.checkValid()) {
+            System.out.println("Out of range!");
+            return false;
+        }
+
+        if (worldArray[nextCharacter.yInd][nextCharacter.xInd] == 1) {
+            System.out.println("Hitting the wall!");
+            return false;
+        }
+
+        worldArray[character.yInd][character.xInd] = 2;
+        worldArray[nextCharacter.yInd][nextCharacter.xInd] = 3;
+        character = new Position(nextCharacter);
+        return true;
+    }
+
+    public String getStatus(int xInd, int yInd) {
+        int[] ind = {xInd, yInd};
+        Position pos = new Position(ind);
+        if (!pos.checkValid()) {
+            return "";
+        }
+        int content = worldArray[yInd][xInd];
+        if (content == 0) {
+            return "Outside";
+        } else if (content == 1) {
+            return "Wall";
+        } else if (content == 2) {
+            return "Floor";
+        } else if (content == 3) {
+            return "Character";
+        } else if (content == 4) {
+            return "Door";
+        } else {
+            return "";
+        }
+    }
+
+    /* generate a random world with rooms and hallways */
+    private void generateWorld() {
         while (roomList.size() < totalRoomCount) {
             if (roomList.size() == 0) {
                 int x = generateRandom((int) (0.4 * xSize), (int) (0.6 * xSize));
@@ -85,64 +146,109 @@ public class World {
         }
     }
 
-    /* Add a new room to the room lists and update the world array for visualization */
-    private void updateRoomToWorld(Room newRoom) {
-        roomList.add(newRoom);
+    /* A room class which contains its leftBottom, rightTop and center position */
+    private class Room implements Serializable {
+        private Position leftBottom;
+        private Position rightTop;
+        private Position center;
+        private int width;
+        private int height;
 
-        Position leftBottom = newRoom.leftBottom;
-        Position rightTop = newRoom.rightTop;
+        Room(Position center, int height, int width) {
+            this.center = new Position(center);
+            this.width = width % 2 == 0 ? width + 1 : width;
+            this.height = height == 0 ? height + 1 : height;
 
-        for (int i = rightTop.yInd; i <= leftBottom.yInd; i++) {
-            for (int j = leftBottom.xInd; j <= rightTop.xInd; j++) {
-                worldArray[i][j] = 2;
-            }
+            int xOffset = (int) (0.5 * width);
+            int yOffset = (int) (0.5 * height);
+            leftBottom = new Position(center, -xOffset, -yOffset);
+            rightTop = new Position(center, xOffset, yOffset);
+            //System.out.println("Created a room with leftbottom cord: " + LeftBottom.x + ", "
+            // + LeftBottom.y + " and righttop cord: " + RightTop.x + ", " + RightTop.y + ".\n");
         }
 
-        for (int i = leftBottom.xInd; i < rightTop.xInd; i++) {
-            worldArray[rightTop.yInd][i] = 1;
-        }
-
-        for (int i = rightTop.yInd; i < leftBottom.yInd; i++) {
-            worldArray[i][rightTop.xInd] = 1;
-        }
-
-        for (int i = rightTop.xInd; i > leftBottom.xInd; i--) {
-            worldArray[leftBottom.yInd][i] = 1;
-        }
-
-        for (int i = leftBottom.yInd; i > rightTop.yInd; i--) {
-            worldArray[i][leftBottom.xInd] = 1;
+        public boolean checkOverLap(Room other) {
+            int xOffset = Math.abs(center.x - other.center.x);
+            int yOffset = Math.abs(center.y - other.center.y);
+            return (xOffset < (width + other.width) / 2 && yOffset < (height + other.height) / 2);
         }
     }
 
-    /* Add a new room to the room lists and update the world array for visualization */
-    private void updateHallwayToWorld(Hallway hallway) {
-        hallwayList.add(hallway);
+    /* A hallway class which contains its leftBottom, rightTop and orientation */
+    private class Hallway implements Serializable {
+        private Position leftBottom;
+        private Position rightTop;
+        int dir;
 
-        Position leftBottom = hallway.leftBottom;
-        Position rightTop = hallway.rightTop;
-        int dir = hallway.dir;
+        Hallway(Position leftBottom, Position rightTop, int dir) {
+            this.leftBottom = leftBottom;
+            this.rightTop = rightTop;
+            this.dir = dir;
+        }
+    }
 
-        for (int i = rightTop.yInd; i <= leftBottom.yInd; i++) {
-            for (int j = leftBottom.xInd; j <= rightTop.xInd; j++) {
-                worldArray[i][j] = 1;
-            }
+    /* A Position class for storing and calculating position information*/
+    protected class Position implements Serializable {
+        private int x;
+        private int y;
+        private int xInd;
+        private int yInd;
+
+        /* initialize position with given x and y coordinates*/
+        public Position(int x, int y) {
+            this.x = x;
+            this.y = y;
+            cordToindex();
         }
 
-        /* if the hallway is vertical */
-        if (dir == 0 || dir == 2) {
-            for (int i = rightTop.yInd; i <= leftBottom.yInd; i++) {
-                worldArray[i][leftBottom.xInd + 1] = 2;
-            }
-        } else {
-            for (int i = leftBottom.xInd; i <= rightTop.xInd; i++) {
-                worldArray[leftBottom.yInd - 1][i] = 2;
-            }
+        /* initialize position with another position(copy) */
+        public Position(Position other) {
+            x = other.x;
+            y = other.y;
+            cordToindex();
+        }
+
+        /* initialize position with another position and offset */
+        public Position(Position center, int xOffset, int yOffset) {
+            x = center.x + xOffset;
+            y = center.y + yOffset;
+            cordToindex();
+        }
+
+        /* initialize position with array index */
+        public Position(int[] ind) {
+            xInd = ind[0];
+            yInd = ind[1];
+            indexTocord();
+        }
+
+        private void cordToindex() {
+            xInd = x;
+            yInd = ySize - 1 - y;
+        }
+
+        private void indexTocord() {
+            x = xInd;
+            y = ySize - 1 - yInd;
+        }
+
+        public boolean checkValid() {
+            return !(xInd < 0 || xInd >= xSize || yInd < 0 || yInd >= ySize);
+        }
+
+        public int[] getPosition() {
+            int[] pos = {x, y};
+            return pos;
+        }
+
+        public int[] getArrayIndex() {
+            int[] ind = {xInd, yInd};
+            return ind;
         }
     }
 
     /* Create a new Room randomly */
-    public Room createRoom(Room currRoom, int dir, boolean buildHallway) {
+    private Room createRoom(Room currRoom, int dir, boolean buildHallway) {
         int distance = generateRandom(2, 5);
         int width = generateRandom(roomWidthLowerBound, roomWidthUpperBound);
         int height = generateRandom(roomHeightLowerBound, roomHeightUpperBound);
@@ -221,127 +327,63 @@ public class World {
         return hallway;
     }
 
-    private class Room {
-        private Position leftBottom;
-        private Position rightTop;
-        private Position center;
-        private int width;
-        private int height;
+    /* Add a new room to the room lists and update the world array for visualization */
+    private void updateRoomToWorld(Room newRoom) {
+        roomList.add(newRoom);
 
-        Room(Position center, int height, int width) {
-            this.center = new Position(center);
-            this.width = width % 2 == 0 ? width + 1 : width;
-            this.height = height == 0 ? height + 1 : height;
+        Position leftBottom = newRoom.leftBottom;
+        Position rightTop = newRoom.rightTop;
 
-            int xOffset = (int) (0.5 * width);
-            int yOffset = (int) (0.5 * height);
-            leftBottom = new Position(center, -xOffset, -yOffset);
-            rightTop = new Position(center, xOffset, yOffset);
-            //System.out.println("Created a room with leftbottom cord: " + LeftBottom.x + ", "
-            // + LeftBottom.y + " and righttop cord: " + RightTop.x + ", " + RightTop.y + ".\n");
-        }
-
-        public boolean checkOverLap(Room other) {
-            int xOffset = Math.abs(center.x - other.center.x);
-            int yOffset = Math.abs(center.y - other.center.y);
-            return (xOffset < (width + other.width) / 2 && yOffset < (height + other.height) / 2);
-        }
-    }
-
-    private class Hallway {
-        private Position leftBottom;
-        private Position rightTop;
-        int dir;
-
-        Hallway(Position leftBottom, Position rightTop, int dir) {
-            this.leftBottom = leftBottom;
-            this.rightTop = rightTop;
-            this.dir = dir;
-        }
-    }
-
-    /* A Utility function for checking room validation (for array and other existing rooms) */
-    private boolean checkRoom(Room currentRoom) {
-
-        if (!(currentRoom.leftBottom.checkValid() && currentRoom.rightTop.checkValid())) {
-            return false;
-        }
-
-        for (Room other : roomList) {
-            if (currentRoom.checkOverLap(other)) {
-                return false;
+        for (int i = rightTop.yInd; i <= leftBottom.yInd; i++) {
+            for (int j = leftBottom.xInd; j <= rightTop.xInd; j++) {
+                worldArray[i][j] = 2;
             }
         }
 
-        return true;
-    }
-
-    /* A Position class for storing and calculating position information*/
-    protected class Position {
-        private int x;
-        private int y;
-        private int xInd;
-        private int yInd;
-
-        /* initialize position with given x and y coordinates*/
-        public Position(int x, int y) {
-            this.x = x;
-            this.y = y;
-            cordToindex();
+        for (int i = leftBottom.xInd; i < rightTop.xInd; i++) {
+            worldArray[rightTop.yInd][i] = 1;
         }
 
-        /* initialize position with another position(copy) */
-        public Position(Position other) {
-            x = other.x;
-            y = other.y;
-            cordToindex();
+        for (int i = rightTop.yInd; i < leftBottom.yInd; i++) {
+            worldArray[i][rightTop.xInd] = 1;
         }
 
-        /* initialize position with another position and offset */
-        public Position(Position center, int xOffset, int yOffset) {
-            x = center.x + xOffset;
-            y = center.y + yOffset;
-            cordToindex();
+        for (int i = rightTop.xInd; i > leftBottom.xInd; i--) {
+            worldArray[leftBottom.yInd][i] = 1;
         }
 
-        public void cordToindex() {
-            xInd = x;
-            yInd = ySize - y;
-        }
-
-        public boolean checkValid() {
-            return !(xInd < 0 || xInd >= xSize || yInd < 0 || yInd >= ySize);
+        for (int i = leftBottom.yInd; i > rightTop.yInd; i--) {
+            worldArray[i][leftBottom.xInd] = 1;
         }
     }
 
-    /* A Utility function for printing the world to console*/
-    public void printWorld() {
-        for (int i = 0; i < ySize; i++) {
-            for (int j = 0; j < xSize; j++) {
-                String content;
-                if (worldArray[i][j] == 0) {
-                    content = ".";
-                } else if (worldArray[i][j] == 1) {
-                    content = "#";
-                } else if (worldArray[i][j] == 2) {
-                    content = "/";
-                } else if (worldArray[i][j] == 3) {
-                    content = "*";
-                } else if (worldArray[i][j] == 4) {
-                    content = "$";
-                } else {
-                    System.out.println("Invalid content in map.\n");
-                    return;
-                }
+    /* Add a new room to the room lists and update the world array for visualization */
+    private void updateHallwayToWorld(Hallway hallway) {
+        hallwayList.add(hallway);
 
-                System.out.print(content + " ");
+        Position leftBottom = hallway.leftBottom;
+        Position rightTop = hallway.rightTop;
+        int dir = hallway.dir;
+
+        for (int i = rightTop.yInd; i <= leftBottom.yInd; i++) {
+            for (int j = leftBottom.xInd; j <= rightTop.xInd; j++) {
+                worldArray[i][j] = 1;
             }
-            System.out.print("\n");
         }
-        System.out.print("World printed\n");
+
+        /* if the hallway is vertical */
+        if (dir == 0 || dir == 2) {
+            for (int i = rightTop.yInd; i <= leftBottom.yInd; i++) {
+                worldArray[i][leftBottom.xInd + 1] = 2;
+            }
+        } else {
+            for (int i = leftBottom.xInd; i <= rightTop.xInd; i++) {
+                worldArray[leftBottom.yInd - 1][i] = 2;
+            }
+        }
     }
 
-    public void putCharacterAndDoor() {
+    private void putCharacterAndDoor() {
         int choiceForCharacter = generateRandom(0, roomList.size());
         Room roomForCharacter = roomList.get(choiceForCharacter);
         character = new Position(roomForCharacter.center.x, roomForCharacter.center.y);
@@ -378,39 +420,53 @@ public class World {
 
     }
 
-    public void moveCharacter(char dir) {
-        Position nextCharacter;
-        if (dir == 'W') {
-            nextCharacter = new Position(character, 0, 1);
-        } else if (dir == 'A') {
-            nextCharacter = new Position(character, -1, 0);
-        } else if (dir == 'S') {
-            nextCharacter = new Position(character, 0, -1);
-        } else if (dir == 'D') {
-            nextCharacter = new Position(character, 1, 0);
-        } else {
-            System.out.println("Invalid move command!");
-            return;
+    /* A Utility function for checking room validation (for array and other existing rooms) */
+    private boolean checkRoom(Room currentRoom) {
+
+        if (!(currentRoom.leftBottom.checkValid() && currentRoom.rightTop.checkValid())) {
+            return false;
         }
 
-        if (!nextCharacter.checkValid()
-                || worldArray[nextCharacter.yInd][nextCharacter.xInd] == 1) {
-            return;
+        for (Room other : roomList) {
+            if (currentRoom.checkOverLap(other)) {
+                return false;
+            }
         }
 
-        worldArray[character.yInd][character.xInd] = 2;
-        worldArray[nextCharacter.yInd][nextCharacter.xInd] = 3;
-        character = new Position(nextCharacter);
+        return true;
+    }
+
+    /* A Utility function for printing the world to console for debugging */
+    private void printWorld() {
+        for (int i = 0; i < ySize; i++) {
+            for (int j = 0; j < xSize; j++) {
+                String content;
+                if (worldArray[i][j] == 0) {
+                    content = ".";
+                } else if (worldArray[i][j] == 1) {
+                    content = "#";
+                } else if (worldArray[i][j] == 2) {
+                    content = "/";
+                } else if (worldArray[i][j] == 3) {
+                    content = "*";
+                } else if (worldArray[i][j] == 4) {
+                    content = "$";
+                } else {
+                    System.out.println("Invalid content in map.\n");
+                    return;
+                }
+
+                System.out.print(content + " ");
+            }
+            System.out.print("\n");
+        }
+        System.out.print("World printed\n");
     }
 
     /* A Utility function for generating random integer between [lower, upper) */
-    public int generateRandom(int lower, int upper) {
+    private int generateRandom(int lower, int upper) {
         double ratio = RANDOM.nextDouble();
         return (int) (lower + (upper - lower) * ratio);
     }
 
-    /* getter function for world array */
-    public int[][] getWorldArray() {
-        return worldArray;
-    }
 }
