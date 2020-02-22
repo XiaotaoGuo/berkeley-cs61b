@@ -38,11 +38,12 @@ public class Percolation {
         if (!openSites[row][col]) {
             openSites[row][col] = true;
             openCount++;
+
             if (row == 0) {
-                sites.connected(top, posToIndex(row, col));
+                sites.union(top, posToIndex(row, col));
             }
             if (row == length - 1) {
-                sites.connected(bottom, posToIndex(row, col));
+                sites.union(bottom, posToIndex(row, col));
             }
 
             if (row > 0) {
@@ -80,12 +81,12 @@ public class Percolation {
     public static void main(String[] args) {
 
 
-        Percolation per = new Percolation(5);
-        for (int i = 0; i < 5; i++) {
-            per.open(i, 0);
-        }
-        assertEquals(5, per.numberOfOpenSites());
-        assertEquals(true, per.percolates());
+        Percolation per = new Percolation(6);
+        per.open(0, 5);
+        assertEquals(true, per.isOpen(0, 5));
+        assertEquals(true, per.isFull(0, 5));
+        assertEquals(1, per.numberOfOpenSites());
+        assertEquals(false, per.percolates());
 
 
     }
