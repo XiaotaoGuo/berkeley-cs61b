@@ -25,8 +25,6 @@ public class Percolation {
         openSites = new boolean[N][N];
         openCount = 0;
         for (int i = 0; i < N; i++) {
-            sites.union(top, posToIndex(0, i));
-            sites.union(bottom, posToIndex(N - 1, i));
             for (int j = 0; j < N; j++) {
                 openSites[i][j] = false;
             }
@@ -40,6 +38,13 @@ public class Percolation {
         if (!openSites[row][col]) {
             openSites[row][col] = true;
             openCount++;
+            if (row == 0) {
+                sites.connected(top, posToIndex(row, col));
+            }
+            if (row == length - 1) {
+                sites.connected(bottom, posToIndex(row, col));
+            }
+
             if (row > 0) {
                 unionHelper(row, col, row - 1, col);
             }
@@ -60,7 +65,7 @@ public class Percolation {
     }
 
     public boolean isFull(int row, int col) {
-        return sites.connected(top, posToIndex(row, col));
+        return openSites[row][col] && sites.connected(top, posToIndex(row, col));
     }
 
     public int numberOfOpenSites() {
