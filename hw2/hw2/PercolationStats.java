@@ -23,12 +23,13 @@ public class PercolationStats {
             Percolation currPer = pf.make(N);
             int count = 0;
             while(!currPer.percolates()) {
-                int index = StdRandom.uniform(blockedSite.size());
+                int index = StdRandom.uniform(N * N);
                 int row = index / N;
                 int col = index % N;
-                currPer.open(row, col);
-                blockedSite.remove(index);
-                count++;
+                if (!currPer.isOpen(row, col)) {
+                    currPer.open(row, col);
+                    count++;
+                }
             }
             percolationThresholdList[i] = (double) count / (N * N);
         }
