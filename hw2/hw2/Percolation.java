@@ -42,7 +42,7 @@ public class Percolation {
             if (row == 0) {
                 sites.union(top, posToIndex(row, col));
             }
-            if (row == length - 1) {
+            if (row == length - 1 && !percolates()) {
                 sites.union(bottom, posToIndex(row, col));
             }
 
