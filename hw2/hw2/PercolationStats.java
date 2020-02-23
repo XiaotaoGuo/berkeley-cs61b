@@ -22,7 +22,7 @@ public class PercolationStats {
         for (int i = 0; i < T; i++) {
             Percolation currPer = pf.make(N);
             int count = 0;
-            while(!currPer.percolates()) {
+            while (!currPer.percolates()) {
                 int index = StdRandom.uniform(N * N);
                 int row = index / N;
                 int col = index % N;

@@ -16,7 +16,7 @@ public class Percolation {
     private int openCount;
     private boolean isPercolate;
 
-    public Percolation (int N) {
+    public Percolation(int N) {
         if (N <= 0) {
             throw new java.lang.IllegalArgumentException("N should be positive");
         }
