@@ -70,6 +70,9 @@ public class QuickSort {
         Queue<Item> equal = new Queue<>();
         Queue<Item> greater = new Queue<>();
         partition(items, getRandomItem(items), less, equal, greater);
+        if (equal.size() == items.size()) {
+            return equal;
+        }
         less = quickSort(less);
         equal = quickSort(equal);
         greater = quickSort(greater);
@@ -79,11 +82,11 @@ public class QuickSort {
 
     public static void main(String[] args) {
         Queue<Integer> nums = new Queue<>();
-        nums.enqueue(5);
-        nums.enqueue(4);
-        nums.enqueue(3);
-        nums.enqueue(2);
         nums.enqueue(1);
+        nums.enqueue(2);
+        nums.enqueue(3);
+        nums.enqueue(4);
+        nums.enqueue(5);
         Queue<Integer> sortedQueue = QuickSort.quickSort(nums);
         System.out.println("Unsorted queue: ");
         for (Integer num: nums) {
