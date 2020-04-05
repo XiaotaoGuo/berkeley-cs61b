@@ -31,7 +31,7 @@ public class RadixSort {
         }
 
         for (int i = 0; i < width; i++) {
-            sortHelperLSD(copy, i);
+            sortHelperLSD(copy, width - 1 - i);
         }
 
         return copy;
@@ -62,7 +62,7 @@ public class RadixSort {
             if (index >= str.length()) {
                 place = 0;
             } else {
-                place = (int) str.charAt(str.length() - 1 - index);
+                place = (int) str.charAt(index);
             }
 
             buckets[place]++;
@@ -78,7 +78,7 @@ public class RadixSort {
             if (index >= str.length()) {
                 place = 0;
             } else {
-                place = (int) str.charAt(str.length() - 1 - index);
+                place = (int) str.charAt(index);
             }
             int pos = starts[place];
             asciis[pos] = str;
