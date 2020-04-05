@@ -16,6 +16,10 @@ public class RadixSort {
      * @return String[] the sorted array
      */
     public static String[] sort(String[] asciis) {
+        if (asciis.length == 0) {
+            return asciis;
+        }
+
         int width = 0;
         for (String str: asciis) {
             width = width < str.length() ? str.length() : width;
@@ -43,9 +47,14 @@ public class RadixSort {
         // Optional LSD helper method for required LSD radix sort
         int[] buckets = new int[256];
         int[] starts = new int[256];
+        String[] copy = new String[asciis.length];
 
         for (int i = 0; i < 256; i++) {
             buckets[i] = 0;
+        }
+
+        for (int i = 0; i < asciis.length; i++) {
+            copy[i] = asciis[i];
         }
 
         for (String str: asciis) {
@@ -64,8 +73,7 @@ public class RadixSort {
             starts[i] = starts[i - 1] + buckets[i - 1];
         }
 
-        String[] sorted = new String[asciis.length];
-        for (String str: asciis) {
+        for (String str: copy) {
             int place;
             if (index >= str.length()) {
                 place = 0;
@@ -73,11 +81,10 @@ public class RadixSort {
                 place = (int) str.charAt(str.length() - 1 - index);
             }
             int pos = starts[place];
-            sorted[pos] = str;
+            asciis[pos] = str;
             starts[place]++;
         }
 
-        asciis = sorted;
         return;
     }
 

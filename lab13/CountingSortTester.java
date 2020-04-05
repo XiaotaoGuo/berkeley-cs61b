@@ -14,6 +14,8 @@ public class CountingSortTester {
      **/
     private static int[] nonNegative = {9, 5, 2, 1, 5, 3, 0, 3, 1, 1};
 
+    private static String[] strings = {"121", "211", "33", "1234"};
+
     public static void assertIsSorted(int[] a) {
         int previous = Integer.MIN_VALUE;
         for (int x : a) {
@@ -53,8 +55,19 @@ public class CountingSortTester {
         assertIsSorted(sortedSomeNegative);
     }
 
+    @Test
+
 
     public static void main(String[] args) {
-        jh61b.junit.TestRunner.runTests(CountingSortTester.class);
+        //jh61b.junit.TestRunner.runTests(CountingSortTester.class);
+        String[] sortedStrings = RadixSort.sort(strings);
+        for (String str: strings) {
+            System.out.print(str + " ");
+        }
+        System.out.println();
+        for (String str: sortedStrings) {
+            System.out.print(str + " ");
+        }
+        System.out.println();
     }
 }
