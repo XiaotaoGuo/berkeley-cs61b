@@ -17,11 +17,10 @@ public class Rasterer {
     public static final double ROOT_ULLAT = 37.892195547244356, ROOT_ULLON = -122.2998046875,
             ROOT_LRLAT = 37.82280243352756, ROOT_LRLON = -122.2119140625;
     /** Each tile is 256x256 pixels. */
-    public static final int TILE_SIZE = 256;
-    public static double L0LonDPP, LOLATDPP;
+    private static final int TILE_SIZE = 256;
+    private static double L0LonDPP, LOLATDPP;
 
     public Rasterer() {
-        // TODO: YOUR CODE HERE
         L0LonDPP = (ROOT_LRLON - ROOT_ULLON) / TILE_SIZE;
         LOLATDPP = (ROOT_ULLAT - ROOT_LRLAT) / TILE_SIZE;
     }
@@ -66,8 +65,8 @@ public class Rasterer {
         double requiredLonDPP = (params.get("lrlon") - params.get("ullon")) / params.get("w");
         double ullon = Math.max(params.get("ullon"), ROOT_ULLON);
         double lrlon = Math.min(params.get("lrlon"), ROOT_LRLON);
-        double ullat = Math.max(params.get("ullat"), ROOT_ULLAT);
-        double lrlat = Math.min(params.get("ullat"), ROOT_LRLAT);
+        double ullat = Math.min(params.get("ullat"), ROOT_ULLAT);
+        double lrlat = Math.max(params.get("lrlat"), ROOT_LRLAT);
 
         int currentLevel = 0;
         double currentLonDPP = L0LonDPP;
@@ -84,21 +83,27 @@ public class Rasterer {
         int rowBeginIndex = findTileIndex(ROOT_ULLAT, ullat, currentLatDPP * TILE_SIZE);
         int rowEndIndex = findTileIndex(ROOT_ULLAT, lrlat, currentLatDPP * TILE_SIZE);
 
-        results.put("raster_ul_lon", getPos(ROOT_ULLON, colBeginIndex, currentLonDPP * TILE_SIZE));
-        results.put("raster_ul_lat", getPos(ROOT_ULLAT, rowBeginIndex, -1 * currentLatDPP * TILE_SIZE));
-        results.put("raster_lr_lon", getPos(ROOT_ULLON, colEndIndex + 1, currentLonDPP * TILE_SIZE));
-        results.put("raster_lr_lat", getPos(ROOT_ULLAT, rowEndIndex + 1, -1 * currentLatDPP * TILE_SIZE));
+        results.put("raster_ul_lon", getPos(ROOT_ULLON, colBeginIndex,
+                currentLonDPP * TILE_SIZE));
+        results.put("raster_ul_lat", getPos(ROOT_ULLAT, rowBeginIndex,
+                -1 * currentLatDPP * TILE_SIZE));
+        results.put("raster_lr_lon", getPos(ROOT_ULLON, colEndIndex + 1,
+                currentLonDPP * TILE_SIZE));
+        results.put("raster_lr_lat", getPos(ROOT_ULLAT, rowEndIndex + 1,
+                -1 * currentLatDPP * TILE_SIZE));
         results.put("query_success", true);
         results.put("depth", currentLevel);
 
-        String[][] render_grid = new String[rowEndIndex - rowBeginIndex + 1][colEndIndex - colBeginIndex + 1];
+        String[][] renderGrid = new String[rowEndIndex - rowBeginIndex + 1]
+                [colEndIndex - colBeginIndex + 1];
         for (int i = rowBeginIndex; i <= rowEndIndex; i++) {
             for (int j = colBeginIndex; j <= colEndIndex; j++) {
-                render_grid[i - rowBeginIndex][j - colBeginIndex] = "d" + currentLevel + "_x" + j + "_y" + i + ".png";
+                renderGrid[i - rowBeginIndex][j - colBeginIndex] = "d" + currentLevel
+                        + "_x" + j + "_y" + i + ".png";
             }
         }
 
-        results.put("render_grid", render_grid);
+        results.put("render_grid", renderGrid);
 
         /*
         System.out.println("Since you haven't implemented getMapRaster, nothing is displayed in "
@@ -109,7 +114,7 @@ public class Rasterer {
     }
 
     private int findTileIndex(double begin, double target, double width) {
-        return (int)(Math.abs(target - begin) / width);
+        return (int) (Math.abs(target - begin) / width);
     }
 
     private double getPos(double begin, int index, double width) {
@@ -117,15 +122,15 @@ public class Rasterer {
     }
 
     private boolean checkBoundary(Map<String, Double> params) {
-        return params.get("ullon") < ROOT_LRLON ||
-                params.get("lrlon") > ROOT_ULLON ||
-                params.get("ullat") > ROOT_LRLAT ||
-                params.get("lrlat") < ROOT_ULLAT;
+        return params.get("ullon") < ROOT_LRLON
+                || params.get("lrlon") > ROOT_ULLON
+                || params.get("ullat") > ROOT_LRLAT
+                || params.get("lrlat") < ROOT_ULLAT;
     }
 
     private boolean checkValidParams(Map<String, Double> params) {
-        return params.get("ullon") < params.get("lrlon") &&
-                params.get("ullat") > params.get("lrlat");
+        return params.get("ullon") < params.get("lrlon")
+                && params.get("ullat") > params.get("lrlat");
     }
 
 }
