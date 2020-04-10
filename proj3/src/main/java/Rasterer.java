@@ -9,8 +9,21 @@ import java.util.Map;
  */
 public class Rasterer {
 
+    /**
+     * The root upper left/lower right longitudes and latitudes represent the bounding box of
+     * the root tile, as the images in the img/ folder are scraped.
+     * Longitude == x-axis; latitude == y-axis.
+     */
+    public static final double ROOT_ULLAT = 37.892195547244356, ROOT_ULLON = -122.2998046875,
+            ROOT_LRLAT = 37.82280243352756, ROOT_LRLON = -122.2119140625;
+    /** Each tile is 256x256 pixels. */
+    public static final int TILE_SIZE = 256;
+    public static double L0LonDPP, LOLATDPP;
+
     public Rasterer() {
-        // YOUR CODE HERE
+        // TODO: YOUR CODE HERE
+        L0LonDPP = (ROOT_LRLON - ROOT_ULLON) / TILE_SIZE;
+        LOLATDPP = (ROOT_ULLAT - ROOT_LRLAT) / TILE_SIZE;
     }
 
     /**
@@ -44,9 +57,75 @@ public class Rasterer {
     public Map<String, Object> getMapRaster(Map<String, Double> params) {
         // System.out.println(params);
         Map<String, Object> results = new HashMap<>();
+        if (!checkBoundary(params) || !checkValidParams(params)) {
+            results.put("query_success", false);
+            return results;
+        }
+
+
+        double requiredLonDPP = (params.get("lrlon") - params.get("ullon")) / params.get("w");
+        double ullon = Math.max(params.get("ullon"), ROOT_ULLON);
+        double lrlon = Math.min(params.get("lrlon"), ROOT_LRLON);
+        double ullat = Math.max(params.get("ullat"), ROOT_ULLAT);
+        double lrlat = Math.min(params.get("ullat"), ROOT_LRLAT);
+
+        int currentLevel = 0;
+        double currentLonDPP = L0LonDPP;
+        double currentLatDPP = LOLATDPP;
+
+        while (currentLonDPP > requiredLonDPP && currentLevel < 7) {
+            currentLevel++;
+            currentLonDPP /= 2;
+            currentLatDPP /= 2;
+        }
+
+        int colBeginIndex = findTileIndex(ROOT_ULLON, ullon, currentLonDPP * TILE_SIZE);
+        int colEndIndex = findTileIndex(ROOT_ULLON, lrlon, currentLonDPP * TILE_SIZE);
+        int rowBeginIndex = findTileIndex(ROOT_ULLAT, ullat, currentLatDPP * TILE_SIZE);
+        int rowEndIndex = findTileIndex(ROOT_ULLAT, lrlat, currentLatDPP * TILE_SIZE);
+
+        results.put("raster_ul_lon", getPos(ROOT_ULLON, colBeginIndex, currentLonDPP * TILE_SIZE));
+        results.put("raster_ul_lat", getPos(ROOT_ULLAT, rowBeginIndex, -1 * currentLatDPP * TILE_SIZE));
+        results.put("raster_lr_lon", getPos(ROOT_ULLON, colEndIndex + 1, currentLonDPP * TILE_SIZE));
+        results.put("raster_lr_lat", getPos(ROOT_ULLAT, rowEndIndex + 1, -1 * currentLatDPP * TILE_SIZE));
+        results.put("query_success", true);
+        results.put("depth", currentLevel);
+
+        String[][] render_grid = new String[rowEndIndex - rowBeginIndex + 1][colEndIndex - colBeginIndex + 1];
+        for (int i = rowBeginIndex; i <= rowEndIndex; i++) {
+            for (int j = colBeginIndex; j <= colEndIndex; j++) {
+                render_grid[i - rowBeginIndex][j - colBeginIndex] = "d" + currentLevel + "_x" + j + "_y" + i + ".png";
+            }
+        }
+
+        results.put("render_grid", render_grid);
+
+        /*
         System.out.println("Since you haven't implemented getMapRaster, nothing is displayed in "
                            + "your browser.");
+        */
         return results;
+
+    }
+
+    private int findTileIndex(double begin, double target, double width) {
+        return (int)(Math.abs(target - begin) / width);
+    }
+
+    private double getPos(double begin, int index, double width) {
+        return begin + index * width;
+    }
+
+    private boolean checkBoundary(Map<String, Double> params) {
+        return params.get("ullon") < ROOT_LRLON ||
+                params.get("lrlon") > ROOT_ULLON ||
+                params.get("ullat") > ROOT_LRLAT ||
+                params.get("lrlat") < ROOT_ULLAT;
+    }
+
+    private boolean checkValidParams(Map<String, Double> params) {
+        return params.get("ullon") < params.get("lrlon") &&
+                params.get("ullat") > params.get("lrlat");
     }
 
 }
