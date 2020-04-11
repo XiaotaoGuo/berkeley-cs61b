@@ -28,10 +28,6 @@ public class Router {
         Long startId = g.closest(stlon, stlat);
         Long destId = g.closest(destlon, destlat);
 
-//        Set<Long> visStart = bfs(g, startId);
-//        boolean cont = visStart.contains(destId);
-//        Set<Long> visDest = bfs(g, destId);
-
         GraphDB.Node current = g.getNode(startId);
         PriorityQueue<GraphDB.Node> pq = new PriorityQueue<>(g.comparator);
 
@@ -39,16 +35,9 @@ public class Router {
         current.distanceToStart = 0;
         current.distanceToGoal = g.distance(startId, destId);
         pq.add(current);
-//        HashSet<Long> visited = new HashSet<>();
         while (!pq.isEmpty()) {
             current = pq.poll();
             current.visited = true;
-//            visited.add(current.id);
-//            if (visited.contains(destId)) {
-//                boolean find = current.id.equals(destId);
-//                int a = 1;
-//                break;
-//            }
             if (current.id.equals(destId)) {
                 break;
             }
@@ -69,8 +58,6 @@ public class Router {
                 pq.add(next);
             }
         }
-
-//        cont = visited.contains(destId);
         List<Long> results = new ArrayList<>();
         if (!current.id.equals(destId)) {
             return results;
@@ -83,28 +70,7 @@ public class Router {
             results.add(current.id);
         }
         Collections.reverse(results);
-        return results; // FIXME
-    }
-
-    private static Set<Long> bfs(GraphDB g, Long id) {
-        g.routeInitialize();
-        Queue<Long> q = new ArrayDeque<>();
-        q.add(id);
-        Set<Long> visited = new HashSet<>();
-        while (!q.isEmpty()) {
-            Long currId = q.poll();
-            GraphDB.Node current = g.getNode(currId);
-            current.visited = true;
-            visited.add(currId);
-            for (Long nextId: current.neighbors) {
-                GraphDB.Node next = g.getNode(nextId);
-                if (next.visited) {
-                    continue;
-                }
-                q.add(nextId);
-            }
-        }
-        return visited;
+        return results;
     }
 
     /**

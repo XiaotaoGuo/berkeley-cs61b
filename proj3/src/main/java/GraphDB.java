@@ -61,10 +61,20 @@ public class GraphDB {
 
     }
 
+    private class TrieNode {
+        char c;
+        boolean isWord;
+        Map<Character, TrieNode> nextLevel;
+        TrieNode() {
+            nextLevel = new HashMap<>();
+        }
+    }
+
     private Set<Long> nodeids = new HashSet<>();
     private Map<Long, Node> nodes = new HashMap<>();
-    private Map<Long, Node> locations = new HashMap<>();
+    private Map<String, ArrayList<Node>> locations = new HashMap<>();
     private Map<Long, Way> ways = new HashMap<>();
+    private TrieNode head = new TrieNode();
 
     /**
      * Example constructor shows how to create and start an XML parser.
@@ -102,10 +112,10 @@ public class GraphDB {
     }
 
     public void addLocations(Node n) {
-        if (locations.containsKey(n.id)) {
-            return;
+        if (!locations.containsKey(cleanString(n.name))) {
+            locations.put(cleanString(n.name), new ArrayList<>());
         }
-        locations.put(n.id, n);
+        locations.get(cleanString(n.name)).add(n);
     }
 
     public void addWay(Way way) {
@@ -131,12 +141,58 @@ public class GraphDB {
         }
     }
 
+    private void buildTrie() {
+        for (String name : locations.keySet()) {
+            TrieNode curr = head;
+            for (int i = 0; i < name.length(); i++) {
+                Character c = name.charAt(i);
+                if (!curr.nextLevel.containsKey(c)) {
+                    curr.nextLevel.put(c, new TrieNode());
+                }
+                curr = curr.nextLevel.get(c);
+            }
+            curr.isWord = true;
+
+        }
+    }
+
+    public ArrayList<String> autocomplete(String prefix) {
+        ArrayList<String> results = new ArrayList<>();
+        TrieNode curr = head;
+        for (int i = 0; i < prefix.length(); i++) {
+            Character c = prefix.charAt(i);
+            if (!curr.nextLevel.containsKey(c)) {
+                return results;
+            }
+            curr = curr.nextLevel.get(c);
+        }
+
+        autocompleteHelper(curr, prefix, results);
+
+        return results;
+    }
+
+    private void autocompleteHelper(TrieNode curr, String prefix, ArrayList<String> results) {
+        if (curr.isWord) {
+            results.add(prefix);
+        }
+        for (Character c : curr.nextLevel.keySet()) {
+            autocompleteHelper(curr.nextLevel.get(c), prefix + c, results);
+        }
+    }
+
+    public ArrayList<Node> getLocation(String name) {
+        return locations.get(name);
+    }
+
     public Comparator<Node> comparator = new Comparator<Node>() {
         @Override
         public int compare(Node o1, Node o2) {
             double diff = o1.distanceToStart + o1.distanceToGoal
                     - (o2.distanceToStart + o2.distanceToGoal);
-            return diff == 0 ? 0 : (diff < 0 ? -1 : 1);
+            diff = o1.distanceToStart
+                    - o2.distanceToStart;
+            return diff < 0 ? -1 : 1;
         }
     };
 
@@ -159,11 +215,9 @@ public class GraphDB {
             Node n = getNode(id);
             if (n.neighbors.size() == 0) {
                 nodes.remove(n.id);
-                if (locations.containsKey(n.id)) {
-                    locations.remove(id);
-                }
             }
         }
+        buildTrie();
     }
 
     /**
