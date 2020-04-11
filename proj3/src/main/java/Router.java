@@ -1,5 +1,4 @@
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -25,7 +24,86 @@ public class Router {
      */
     public static List<Long> shortestPath(GraphDB g, double stlon, double stlat,
                                           double destlon, double destlat) {
-        return null; // FIXME
+
+        Long startId = g.closest(stlon, stlat);
+        Long destId = g.closest(destlon, destlat);
+
+//        Set<Long> visStart = bfs(g, startId);
+//        boolean cont = visStart.contains(destId);
+//        Set<Long> visDest = bfs(g, destId);
+
+        GraphDB.Node current = g.getNode(startId);
+        PriorityQueue<GraphDB.Node> pq = new PriorityQueue<>(g.comparator);
+
+        g.routeInitialize();
+        current.distanceToStart = 0;
+        current.distanceToGoal = g.distance(startId, destId);
+        pq.add(current);
+//        HashSet<Long> visited = new HashSet<>();
+        while (!pq.isEmpty()) {
+            current = pq.poll();
+            current.visited = true;
+//            visited.add(current.id);
+//            if (visited.contains(destId)) {
+//                boolean find = current.id.equals(destId);
+//                int a = 1;
+//                break;
+//            }
+            if (current.id.equals(destId)) {
+                break;
+            }
+            for (Long nextId: g.adjacent(current.id)) {
+                //visited.add(nextId);
+                GraphDB.Node next = g.getNode(nextId);
+                if (next.visited) {
+                    continue;
+                }
+                double distanceToStart = current.distanceToStart + g.distance(current.id, nextId);
+                if (next.distanceToStart != -1
+                        && distanceToStart > next.distanceToStart) {
+                    continue;
+                }
+                next.prev = current.id;
+                next.distanceToGoal = g.distance(nextId, destId);
+                next.distanceToStart = current.distanceToStart + g.distance(current.id, nextId);
+                pq.add(next);
+            }
+        }
+
+//        cont = visited.contains(destId);
+        if (!current.id.equals(destId)) {
+            return null;
+        }
+
+        List<Long> results = new ArrayList<>();
+        results.add(current.id);
+        while (current.prev != -1) {
+            current = g.getNode(current.prev);
+            results.add(current.id);
+        }
+        Collections.reverse(results);
+        return results; // FIXME
+    }
+
+    private static Set<Long> bfs(GraphDB g, Long id) {
+        g.routeInitialize();
+        Queue<Long> q = new ArrayDeque<>();
+        q.add(id);
+        Set<Long> visited = new HashSet<>();
+        while (!q.isEmpty()) {
+            Long currId = q.poll();
+            GraphDB.Node current = g.getNode(currId);
+            current.visited = true;
+            visited.add(currId);
+            for (Long nextId: current.neighbors) {
+                GraphDB.Node next = g.getNode(nextId);
+                if (next.visited) {
+                    continue;
+                }
+                q.add(nextId);
+            }
+        }
+        return visited;
     }
 
     /**

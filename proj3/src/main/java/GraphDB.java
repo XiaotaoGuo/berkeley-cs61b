@@ -29,11 +29,15 @@ public class GraphDB {
     static class Node {
         public Long id;
         public Double lon, lat;
-        public double distanceToStart;
-        public double distanceToGoal;
+
         public Set<Long> edges;
         public Set<Long> neighbors;
         public String name;
+
+        public double distanceToStart;
+        public double distanceToGoal;
+        public boolean visited;
+        public Long prev;
 
         Node(Long id, Double lon, Double lat) {
             this.id = id;
@@ -118,10 +122,20 @@ public class GraphDB {
         return nodes.get(id);
     }
 
+    public void routeInitialize() {
+        for (Long id: nodes.keySet()) {
+            Node n = getNode(id);
+            n.prev = -1L;
+            n.visited = false;
+            n.distanceToStart = -1;
+        }
+    }
+
     public Comparator<Node> comparator = new Comparator<Node>() {
         @Override
         public int compare(Node o1, Node o2) {
-            double diff = o1.distanceToStart - o2.distanceToStart;
+            double diff = o1.distanceToStart + o1.distanceToGoal
+                    - (o2.distanceToStart + o2.distanceToGoal);
             return diff == 0 ? 0 : (diff < 0 ? -1 : 1);
         }
     };
@@ -242,9 +256,7 @@ public class GraphDB {
         Long id = 0L;
         for (Node n : nodes.values()) {
             double currentDistance = distance(n.lon, n.lat, lon, lat);
-            if (mindistance == -1) {
-                mindistance = currentDistance;
-            } else if (mindistance > currentDistance) {
+            if (mindistance == -1 || mindistance > currentDistance) {
                 mindistance = currentDistance;
                 id = n.id;
             }
