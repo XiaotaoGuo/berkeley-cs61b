@@ -65,8 +65,10 @@ public class GraphDB {
         char c;
         boolean isWord;
         Map<Character, TrieNode> nextLevel;
+        Set<String> fullnames;
         TrieNode() {
             nextLevel = new HashMap<>();
+            fullnames = new HashSet<>();
         }
     }
 
@@ -152,6 +154,10 @@ public class GraphDB {
                 curr = curr.nextLevel.get(c);
             }
             curr.isWord = true;
+            for (Node n : locations.get(name)) {
+                curr.fullnames.add(n.name);
+            }
+
 
         }
     }
@@ -174,7 +180,9 @@ public class GraphDB {
 
     private void autocompleteHelper(TrieNode curr, String prefix, ArrayList<String> results) {
         if (curr.isWord) {
-            results.add(prefix);
+            for (String name : curr.fullnames) {
+                results.add(name);
+            }
         }
         for (Character c : curr.nextLevel.keySet()) {
             autocompleteHelper(curr.nextLevel.get(c), prefix + c, results);
@@ -350,7 +358,7 @@ public class GraphDB {
      */
     public List<Map<String, Object>> getLocations(String locationName) {
         List<Map<String, Object>> results = new ArrayList<>();
-        ArrayList<GraphDB.Node> candidates = getLocation(locationName);
+        ArrayList<GraphDB.Node> candidates = getLocation(cleanString(locationName));
         for (GraphDB.Node n : candidates) {
             Map<String, Object> m = new HashMap<>();
             m.put("lat", n.lat);
