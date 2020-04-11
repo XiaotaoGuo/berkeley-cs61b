@@ -283,7 +283,7 @@ public class MapServer {
 
         ArrayList<String> results = graph.autocomplete(prefix);
 
-        return results;
+        return graph.getLocationsByPrefix(prefix);
     }
 
     /**
@@ -299,17 +299,17 @@ public class MapServer {
      * "id" : Number, The id of the node. <br>
      */
     public static List<Map<String, Object>> getLocations(String locationName) {
-        List<Map<String, Object>> results = new ArrayList<>();
-        ArrayList<GraphDB.Node> candidates = graph.getLocation(locationName);
-        for (GraphDB.Node n : candidates) {
-            Map<String, Object> m = new HashMap<>();
-            m.put("lat", n.lat);
-            m.put("lon", n.lon);
-            m.put("name", n.name);
-            m.put("id", n.id);
-            results.add(m);
-        }
-        return results;
+//        List<Map<String, Object>> results = new ArrayList<>();
+//        ArrayList<GraphDB.Node> candidates = graph.getLocation(locationName);
+//        for (GraphDB.Node n : candidates) {
+//            Map<String, Object> m = new HashMap<>();
+//            m.put("lat", n.lat);
+//            m.put("lon", n.lon);
+//            m.put("name", n.name);
+//            m.put("id", n.id);
+//            results.add(m);
+//        }
+        return graph.getLocations(locationName);
     }
 
     /**
