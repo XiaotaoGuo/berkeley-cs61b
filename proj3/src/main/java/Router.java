@@ -71,11 +71,12 @@ public class Router {
         }
 
 //        cont = visited.contains(destId);
+        List<Long> results = new ArrayList<>();
         if (!current.id.equals(destId)) {
-            return null;
+            return results;
         }
 
-        List<Long> results = new ArrayList<>();
+
         results.add(current.id);
         while (current.prev != -1) {
             current = g.getNode(current.prev);
